@@ -8,20 +8,23 @@ namespace ShoppingListApp.Data
     {
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Nazwa listy jest wymagana.")]
         [Display(Name = "Nazwa listy")]
         public string ListName { get; set; }
 
-        [FutureOrPresentDate(ErrorMessage = "Shopping Date cannot be in the past.")]
+        [FutureOrPresentDate(ErrorMessage = "Data zakupów nie może być w przeszłości.")]
         [Display(Name = "Data zakupów")]
         public DateTime ShoppingDate { get; set; }
 
         [Display(Name = "Opis")]
         public string Description { get; set; }
+
+        // Navigation property
         public List<ShoppingProduct> Products { get; set; }
 
-        // Dodaj właściwość Owner
-        public ApplicationUser Owner { get; set; } // Zakładając, że ApplicationUser jest klasą reprezentującą właściciela
+        // Owner property assuming ApplicationUser is a class representing the owner
+        public string OwnerId { get; set; } // ForeignKey
+        public ApplicationUser Owner { get; set; }
     }
 
     public class FutureOrPresentDateAttribute : ValidationAttribute
@@ -33,6 +36,7 @@ namespace ShoppingListApp.Data
         }
     }
 }
+
 
 
 
