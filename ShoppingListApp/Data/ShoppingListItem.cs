@@ -1,37 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShoppingListApp.Data
 {
     public class ShoppingListItem
     {
         public int Id { get; set; }
-        public string ListName { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Nazwa listy")]
+        public string ListName { get; set; }
+
+        [FutureOrPresentDate(ErrorMessage = "Shopping Date cannot be in the past.")]
+        [Display(Name = "Data zakupów")]
         public DateTime ShoppingDate { get; set; }
-        public List<ShoppingProduct> Products { get; set; } = new List<ShoppingProduct>();
+
+        [Display(Name = "Opis")]
+        public string Description { get; set; }
+        public List<ShoppingProduct> Products { get; set; }
+
+        // Dodaj właściwość Owner
+        public ApplicationUser Owner { get; set; } // Zakładając, że ApplicationUser jest klasą reprezentującą właściciela
+    }
+
+    public class FutureOrPresentDateAttribute : ValidationAttribute
+    {
+        public override bool IsValid(object value)
+        {
+            DateTime date = (DateTime)value;
+            return date >= DateTime.Today;
+        }
     }
 }
 
-public class FutureOrPresentDateAttribute : ValidationAttribute
-    {
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-        {
-            if (value is DateTime dateTime)
-            {
-                if (dateTime.Date >= DateTime.Now.Date)
-                {
-                    return ValidationResult.Success;
-                }
-                else
-                {
-                    return new ValidationResult(ErrorMessage);
-                }
-            }
-            return new ValidationResult("Invalid date format.");
-        }
-    }
 
 
 
