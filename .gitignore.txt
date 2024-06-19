@@ -1,0 +1,3 @@
+.vs/ShoppingListApp/FileContentIndex/*.vsidx
+.vs/
+
