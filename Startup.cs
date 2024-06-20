@@ -30,7 +30,7 @@ public class Startup
 
         services.Configure<IdentityOptions>(options =>
         {
-            // Identity options configuration (e.g., password requirements, lockout settings)
+            
         });
 
         services.AddAuthorization(options =>

@@ -14,12 +14,12 @@ namespace ShoppingListApp.Data
         [Display(Name = "Czy zaznaczone")]
         public bool IsChecked { get; set; }
 
-        // ForeignKey to ShoppingListItem
+   
         public int ShoppingListId { get; set; }
         public ShoppingListItem ShoppingList { get; set; }
 
-        // Owner property assuming ApplicationUser is a class representing the owner
-        public string OwnerId { get; set; } // ForeignKey
+       
+        public string OwnerId { get; set; } 
         public ApplicationUser Owner { get; set; }
     }
 }

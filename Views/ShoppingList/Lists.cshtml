@@ -12,7 +12,7 @@
         <li>
             <a asp-action="Details" asp-route-id="@list.Id">@list.ListName</a>
 
-            <!-- Formularz do usuwania listy zakupów -->
+            
             <form asp-action="Delete" method="post" style="display:inline;">
                 <input type="hidden" name="id" value="@list.Id" />
                 <button type="submit">Delete</button>
@@ -21,6 +21,6 @@
     }
 </ul>
 
-<!-- Link do dodawania nowej listy zakupów -->
+
 <a asp-action="Create" class="btn btn-primary">Add another list</a>
 
