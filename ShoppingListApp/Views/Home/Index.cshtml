@@ -4,10 +4,13 @@
     ViewData["Title"] = "Index";
 }
 <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+
 <h1>Listy zakupów</h1>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Dodaj listę</a>
+    <form action="/Home/Create" method="get">
+        <button type="submit" class="btn btn-primary">Dodaj listę</button>
+    </form>
 </p>
 
 <table class="table">
@@ -16,20 +19,31 @@
             <th>@Html.DisplayNameFor(model => model[0].ListName)</th>
             <th>@Html.DisplayNameFor(model => model[0].Description)</th>
             <th>@Html.DisplayNameFor(model => model[0].ShoppingDate)</th>
-            <th>Actions</th>
+            <th>Akcja</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
+            <tr id="row-@item.Id">
                 <td>@Html.DisplayFor(modelItem => item.ListName)</td>
                 <td>@Html.DisplayFor(modelItem => item.Description)</td>
                 <td>@Html.DisplayFor(modelItem => item.ShoppingDate)</td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Szczegóły</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edytuj</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Usuń</a>
+                    <form action="/Home/Details" method="get" style="display:inline;">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-info">Szczegóły</button>
+                    </form>
+
+                    <form action="/Home/Edit" method="get" style="display:inline;">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-warning">Edytuj</button>
+                    </form>
+
+                    <form class="delete-form" data-id="@item.Id" style="display:inline;" onsubmit="return confirm('Czy na pewno chcesz usunąć tę listę?');">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-danger">Usuń</button>
+                    </form>
                 </td>
             </tr>
         }
@@ -40,5 +54,30 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script>
+        $(document).ready(function () {
+            $(".delete-form").on("submit", function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var id = form.data("id");
+                console.log("Próba usunięcia listy z ID: " + id); 
+
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/DeleteConfirmed",
+                    data: form.serialize(),
+                    success: function () {
+                        console.log("Lista z ID " + id + " została usunięta."); 
+                        $("#row-" + id).remove();
+                    },
+                    error: function () {
+                        console.log("Wystąpił błąd podczas usuwania listy z ID " + id); 
+                    }
+                });
+            });
+        });
+    </script>
 }
+
+
 

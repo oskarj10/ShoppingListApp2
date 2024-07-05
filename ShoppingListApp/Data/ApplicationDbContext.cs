@@ -15,9 +15,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        // Dodatkowe konfiguracje, jeśli są potrzebne
+
+        // Configure cascading delete for ShoppingListItem and ShoppingProduct
+        builder.Entity<ShoppingListItem>()
+            .HasMany(s => s.Products)
+            .WithOne(p => p.ShoppingList)
+            .HasForeignKey(p => p.ShoppingListId)
+            .OnDelete(DeleteBehavior.Cascade); // Ensure cascading delete
     }
 }
+
 
 
 

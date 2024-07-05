@@ -10,21 +10,27 @@ namespace ShoppingListApp.Data
 
         [Required(ErrorMessage = "Nazwa listy jest wymagana.")]
         [Display(Name = "Nazwa listy")]
-        public string ListName { get; set; }
+        public string ListName { get; set; } = string.Empty; 
 
         [FutureOrPresentDate(ErrorMessage = "Data zakupów nie może być w przeszłości.")]
         [Display(Name = "Data zakupów")]
         public DateTime ShoppingDate { get; set; }
 
         [Display(Name = "Opis")]
-        public string Description { get; set; }
+        public string? Description { get; set; } 
 
-        // Navigation property
-        public List<ShoppingProduct> Products { get; set; }
+        [Display(Name = "Zaznaczone")]
+        public bool IsChecked { get; set; }
 
-        // Owner property assuming ApplicationUser is a class representing the owner
-        public string OwnerId { get; set; } // ForeignKey
-        public ApplicationUser Owner { get; set; }
+        public List<ShoppingProduct> Products { get; set; } = new List<ShoppingProduct>(); 
+
+        public string OwnerId { get; set; } = string.Empty; 
+        public ApplicationUser? Owner { get; set; } 
+
+        public ShoppingListItem()
+        {
+           
+        }
     }
 
     public class FutureOrPresentDateAttribute : ValidationAttribute
@@ -36,6 +42,8 @@ namespace ShoppingListApp.Data
         }
     }
 }
+
+
 
 
 

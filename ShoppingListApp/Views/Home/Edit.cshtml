@@ -1,30 +1,38 @@
 ﻿@model ShoppingListApp.Data.ShoppingListItem
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edycja listy";
 }
 
-<h2>Edit</h2>
+<h2>Edycja listy</h2>
 
-<h4>ShoppingListItem</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
+
             <div class="form-group">
-                <label asp-for="ListName" class="control-label"></label>
+                <label asp-for="ListName" class="control-label">Nazwa listy</label>
                 <input asp-for="ListName" class="form-control" />
                 <span asp-validation-for="ListName" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="ShoppingDate" class="control-label"></label>
-                <input asp-for="ShoppingDate" class="form-control" />
+                <label asp-for="Description" class="control-label">Opis</label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ShoppingDate" class="control-label">Data zakupu</label>
+                <input asp-for="ShoppingDate" class="form-control" type="date" />
                 <span asp-validation-for="ShoppingDate" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Zatwierdź zmiany" class="btn btn-primary" />
             </div>
         </form>
     </div>

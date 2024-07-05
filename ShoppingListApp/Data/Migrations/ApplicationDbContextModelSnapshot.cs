@@ -246,7 +246,7 @@ namespace ShoppingListApp.Data.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("ShoppingListItems");
+                    b.ToTable("ShoppingListItems", (string)null);
                 });
 
             modelBuilder.Entity("ShoppingListApp.Data.ShoppingProduct", b =>
@@ -277,7 +277,7 @@ namespace ShoppingListApp.Data.Migrations
 
                     b.HasIndex("ShoppingListId");
 
-                    b.ToTable("ShoppingProducts");
+                    b.ToTable("ShoppingProducts", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

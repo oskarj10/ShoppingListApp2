@@ -1,20 +1,19 @@
 ﻿@model ShoppingListApp.Data.ShoppingListItem
 
 @{
-    ViewData["Title"] = "Details: " + Model.ListName;
+    ViewData["Title"] = "Szczegóły listy: " + Model.ListName;
 }
 
 <h1>@ViewData["Title"]</h1>
 
-<p>List ID: @Model.Id</p>
-<p>List Name: @Model.ListName</p>
-<p>Shopping Date: @Model.ShoppingDate.ToString("dd.MM.yyyy HH:mm:ss")</p>
+<p>Nazwa listy: @Model.ListName</p>
+<p>Data zakupów: @Model.ShoppingDate.ToString("dd.MM.yyyy HH:mm:ss")</p>
 
-<h3>Products</h3>
-<ul>
+<h3>Produkty</h3>
+<ul class="list-group mt-3" id="product-list">
     @foreach (var product in Model.Products)
     {
-        <li>
+        <li class="list-group-item" data-product-id="@product.Id">
             @if (product.IsChecked)
             {
                 <del>@product.ProductName</del>
@@ -23,12 +22,91 @@
             {
                 @product.ProductName
             }
+            <button type="button" class="btn btn-sm btn-secondary float-end mx-1 toggle-status">Zmień status</button>
+            <button type="button" class="btn btn-sm btn-danger float-end mx-1 delete-product">Usuń</button>
         </li>
     }
 </ul>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
-    <a asp-action="Index">Back to Lists</a>
+<h4>Dodaj nowy produkt</h4>
+<form id="add-product-form" asp-controller="ShoppingProduct" asp-action="Create" method="post">
+    <input type="hidden" name="ShoppingListId" value="@Model.Id" />
+    <div class="form-group">
+        <label for="ProductName">Nazwa produktu</label>
+        <input type="text" name="ProductName" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Dodaj produkt</button>
+</form>
+
+<div class="mt-3">
+    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Powrót do list</a>
 </div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#product-list').on('click', '.toggle-status', function () {
+                var $li = $(this).closest('li');
+                var productId = $li.data('product-id');
+
+                $.post('@Url.Action("ToggleProduct", "ShoppingProduct")', { id: productId })
+                    .done(function (data) {
+                        if (data.isChecked) {
+                            $li.find('del').remove();
+                            $li.contents().first().wrap('<del></del>');
+                        } else {
+                            $li.find('del').contents().unwrap();
+                        }
+                    })
+                    .fail(function () {
+                        alert('Wystąpił błąd podczas zmiany statusu.');
+                    });
+            });
+
+            $('#product-list').on('click', '.delete-product', function () {
+                var $li = $(this).closest('li');
+                var productId = $li.data('product-id');
+
+                if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
+                    $.post('@Url.Action("DeleteProduct", "ShoppingProduct")', { id: productId })
+                        .done(function (data) {
+                            if (data.success) {
+                                $li.remove();
+                            } else {
+                                alert('Wystąpił błąd podczas usuwania produktu.');
+                            }
+                        })
+                        .fail(function () {
+                            alert('Wystąpił błąd podczas usuwania produktu.');
+                        });
+                }
+            });
+
+            $('#add-product-form').submit(function (event) {
+                event.preventDefault();
+                var form = $(this);
+                $.post(form.attr('action'), form.serialize())
+                    .done(function (data) {
+                        var newProduct = '<li class="list-group-item" data-product-id="' + data.id + '">' +
+                            data.productName +
+                            '<button type="button" class="btn btn-sm btn-secondary float-end mx-1 toggle-status">Zmień status</button>' +
+                            '<button type="button" class="btn btn-sm btn-danger float-end mx-1 delete-product">Usuń</button>' +
+                            '</li>';
+                        $('#product-list').append(newProduct);
+                        form[0].reset();
+                    })
+                    .fail(function () {
+                        alert('Wystąpił błąd podczas dodawania produktu.');
+                    });
+            });
+        });
+    </script>
+}
+
+
+
+
 

@@ -5,16 +5,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ShoppingListApp.Data.Migrations
 {
-    /// <inheritdoc />
+    
     public partial class Auth : Migration
     {
-        /// <inheritdoc />
+       
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_ShoppingProducts_ShoppingItems_ShoppingListId",
-                table: "ShoppingProducts");
-
+            
             migrationBuilder.DropPrimaryKey(
                 name: "PK_ShoppingItems",
                 table: "ShoppingItems");
@@ -83,7 +80,7 @@ namespace ShoppingListApp.Data.Migrations
             migrationBuilder.AddColumn<DateTime>(
                 name: "ShoppingDate",
                 table: "ShoppingListItems",
-                type: "datetime2",
+                type: "date",
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
@@ -119,15 +116,30 @@ namespace ShoppingListApp.Data.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ShoppingProducts_ShoppingListItems_ShoppingListId",
+                name: "FK_ShoppingProducts_ShoppingItems_ShoppingListId",
                 table: "ShoppingProducts",
                 column: "ShoppingListId",
                 principalTable: "ShoppingListItems",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
+
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsChecked",
+                table: "ShoppingProducts",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsChecked",
+                table: "ShoppingListItems",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
         }
 
-        /// <inheritdoc />
+      
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
@@ -136,10 +148,6 @@ namespace ShoppingListApp.Data.Migrations
 
             migrationBuilder.DropForeignKey(
                 name: "FK_ShoppingProducts_AspNetUsers_OwnerId",
-                table: "ShoppingProducts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ShoppingProducts_ShoppingListItems_ShoppingListId",
                 table: "ShoppingProducts");
 
             migrationBuilder.DropIndex(
@@ -169,6 +177,11 @@ namespace ShoppingListApp.Data.Migrations
             migrationBuilder.DropColumn(
                 name: "ShoppingDate",
                 table: "ShoppingListItems");
+
+           
+            migrationBuilder.DropColumn(
+                name: "IsChecked",
+                table: "ShoppingProducts");
 
             migrationBuilder.RenameTable(
                 name: "ShoppingListItems",
@@ -222,6 +235,10 @@ namespace ShoppingListApp.Data.Migrations
                 principalTable: "ShoppingItems",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.DropColumn(
+                name: "IsChecked",
+                table: "ShoppingListItems");
         }
     }
 }

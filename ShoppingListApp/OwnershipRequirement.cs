@@ -2,5 +2,7 @@
 
 public class OwnershipRequirement : IAuthorizationRequirement
 {
-    // Możesz dodać dodatkowe pola lub logikę, jeśli to konieczne
+    public OwnershipRequirement()
+    {
+    }
 }

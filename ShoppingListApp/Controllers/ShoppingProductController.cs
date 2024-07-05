@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ShoppingListApp.Data;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ShoppingListApp.Controllers
 {
@@ -18,60 +19,63 @@ namespace ShoppingListApp.Controllers
             _authorizationService = authorizationService;
         }
 
-        // GET: /ShoppingProduct/Create/{listId}
-        [Authorize]
-        public IActionResult Create(int listId)
-        {
-            ViewData["ListId"] = listId;
-            return View();
-        }
-
         // POST: /ShoppingProduct/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult Create([Bind("ProductName, ShoppingListId")] ShoppingProduct shoppingProduct)
+        public async Task<IActionResult> Create([Bind("ProductName, ShoppingListId")] ShoppingProduct shoppingProduct)
         {
-            var list = _context.ShoppingListItems.Find(shoppingProduct.ShoppingListId);
-            if (list == null || list.Owner.Id != User.FindFirstValue(ClaimTypes.NameIdentifier))
+            var list = await _context.ShoppingListItems
+                .Include(l => l.Owner)
+                .FirstOrDefaultAsync(l => l.Id == shoppingProduct.ShoppingListId);
+
+            if (list == null || list.OwnerId != User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
                 return Forbid();
             }
 
             if (ModelState.IsValid)
             {
-                shoppingProduct.Owner = list.Owner;
+                shoppingProduct.OwnerId = list.OwnerId;
                 _context.Add(shoppingProduct);
-                _context.SaveChanges();
-                return RedirectToAction("Details", "Home", new { id = shoppingProduct.ShoppingListId });
+                await _context.SaveChangesAsync();
+                return Json(new { id = shoppingProduct.Id, productName = shoppingProduct.ProductName });
             }
-            return View(shoppingProduct);
+            return BadRequest();
         }
+
 
         // POST: /ShoppingProduct/ToggleProduct/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult ToggleProduct(int id)
+        public async Task<IActionResult> ToggleProduct(int id)
         {
-            var product = _context.ShoppingProducts.Find(id);
+            var product = await _context.ShoppingProducts
+                .Include(p => p.Owner)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (product == null || product.Owner.Id != User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
                 return Forbid();
             }
 
             product.IsChecked = !product.IsChecked;
-            _context.SaveChanges();
-            return RedirectToAction("Details", "Home", new { id = product.ShoppingListId });
+            _context.Update(product);
+            await _context.SaveChangesAsync();
+
+            return Json(new { isChecked = product.IsChecked, productName = product.ProductName });
         }
 
-        // POST: /ShoppingProduct/DeleteProduct/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult DeleteProduct(int id)
+        public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = _context.ShoppingProducts.Find(id);
+            var product = await _context.ShoppingProducts
+                .Include(p => p.Owner)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (product == null || product.Owner.Id != User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
                 return Forbid();
@@ -79,9 +83,8 @@ namespace ShoppingListApp.Controllers
 
             var listId = product.ShoppingListId;
             _context.ShoppingProducts.Remove(product);
-            _context.SaveChanges();
-            return RedirectToAction("Details", "Home", new { id = listId });
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
         }
     }
 }
-

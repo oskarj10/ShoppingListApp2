@@ -23,10 +23,11 @@ public class HomeController : Controller
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var shoppingLists = await _context.ShoppingListItems
-            .Where(s => s.Owner.Id == userId)
+            .Where(s => s.OwnerId == userId)
             .ToListAsync();
-        return View(shoppingLists);
+        return View(shoppingLists ?? new List<ShoppingListItem>()); 
     }
+
 
     // GET: /Home/Create
     [Authorize]
@@ -39,11 +40,11 @@ public class HomeController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize]
-    public async Task<IActionResult> Create([Bind("ListName,ShoppingDate,Description")] ShoppingListItem shoppingListItem)
+    public async Task<IActionResult> Create([Bind("ListName,ShoppingDate,Description,IsChecked")] ShoppingListItem shoppingListItem)
     {
         if (ModelState.IsValid)
         {
-            shoppingListItem.Owner = await _context.Users.FindAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            shoppingListItem.OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             _context.Add(shoppingListItem);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -60,7 +61,10 @@ public class HomeController : Controller
             return NotFound();
         }
 
-        var shoppingListItem = await _context.ShoppingListItems.FindAsync(id);
+        var shoppingListItem = await _context.ShoppingListItems
+            .Include(s => s.Owner)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
         if (shoppingListItem == null)
         {
             return NotFound();
@@ -79,7 +83,7 @@ public class HomeController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,ListName,ShoppingDate,Description")] ShoppingListItem shoppingListItem)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,ListName,ShoppingDate,Description,IsChecked")] ShoppingListItem shoppingListItem)
     {
         if (id != shoppingListItem.Id)
         {
@@ -87,6 +91,7 @@ public class HomeController : Controller
         }
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(User, shoppingListItem, "RequireOwner");
+
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -110,7 +115,7 @@ public class HomeController : Controller
                     throw;
                 }
             }
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Details", new { id = shoppingListItem.Id });
         }
         return View(shoppingListItem);
     }
@@ -125,6 +130,7 @@ public class HomeController : Controller
         }
 
         var shoppingListItem = await _context.ShoppingListItems
+            .Include(s => s.Owner)
             .Include(s => s.Products)
             .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -151,7 +157,10 @@ public class HomeController : Controller
             return NotFound();
         }
 
-        var shoppingListItem = await _context.ShoppingListItems.FindAsync(id);
+        var shoppingListItem = await _context.ShoppingListItems
+            .Include(s => s.Owner)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
         if (shoppingListItem == null)
         {
             return NotFound();
@@ -166,25 +175,35 @@ public class HomeController : Controller
         return View(shoppingListItem);
     }
 
-    // POST: /Home/Delete/{id}
-    [HttpPost, ActionName("Delete")]
+    // POST: /Home/DeleteConfirmed
+    [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var shoppingListItem = await _context.ShoppingListItems.FindAsync(id);
+        var shoppingListItem = await _context.ShoppingListItems
+            .Include(s => s.Owner)
+            .Include(s => s.Products) 
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (shoppingListItem == null)
+        {
+            return NotFound();
+        }
+
         var authorizationResult = await _authorizationService.AuthorizeAsync(User, shoppingListItem, "RequireOwner");
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
         }
 
-        if (shoppingListItem != null)
-        {
-            _context.ShoppingListItems.Remove(shoppingListItem);
-            await _context.SaveChangesAsync();
-        }
-        return RedirectToAction(nameof(Index));
+        
+        _context.ShoppingProducts.RemoveRange(shoppingListItem.Products);
+
+        _context.ShoppingListItems.Remove(shoppingListItem);
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 
     private bool ShoppingListItemExists(int id)
@@ -192,4 +211,8 @@ public class HomeController : Controller
         return _context.ShoppingListItems.Any(e => e.Id == id);
     }
 }
+
+
+
+
 

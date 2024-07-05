@@ -1,17 +1,53 @@
 ﻿@model ShoppingListApp.Data.ShoppingListItem
 
 @{
-    ViewData["Title"] = "Delete: " + Model.ListName;
+    ViewData["Title"] = "Usuń listę";
 }
 
-<h1>@ViewData["Title"]</h1>
+<h1>Usuń listę</h1>
 
-<p>Are you sure you want to delete this shopping list?</p>
+<p>Czy na pewno chcesz usunąć tę listę: <strong>@Model.ListName</strong>?</p>
 
-<form asp-action="DeleteConfirmed" method="post">
-    <input type="hidden" asp-for="Id" />
-    <button type="submit" class="btn btn-danger">Delete</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+<form id="delete-form" method="post" action="@Url.Action("DeleteConfirmed", "Home")">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="delete-id" name="id" value="@Model.Id" />
+    <button type="submit" class="btn btn-danger">Usuń</button>
+    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Anuluj</a>
 </form>
+
+@section Scripts {
+    <script>
+        document.getElementById('delete-form').onsubmit = function (event) {
+            event.preventDefault(); 
+
+            if (confirm('Czy na pewno chcesz usunąć tę listę?')) {
+                var form = event.target;
+                var formAction = form.action;
+                var id = document.getElementById('delete-id').value;
+
+                fetch(formAction, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: new URLSearchParams('id=' + id)
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = '@Url.Action("Index", "Home")';
+                        } else {
+                            response.text().then(text => alert('Wystąpił błąd podczas usuwania listy: ' + text));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Wystąpił błąd podczas usuwania listy.');
+                    });
+            }
+        };
+    </script>
+}
+
 
 

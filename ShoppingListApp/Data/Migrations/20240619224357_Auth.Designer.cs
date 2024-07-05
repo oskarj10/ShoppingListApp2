@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ShoppingListApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240619220600_Auth")]
+    [Migration("20240619224357_Auth")]
     partial class Auth
     {
         /// <inheritdoc />

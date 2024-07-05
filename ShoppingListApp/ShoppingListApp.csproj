@@ -34,4 +34,8 @@
     <PackageReference Include="System.Security.Cryptography.Csp" Version="4.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\ShoppingProduct\" />
+  </ItemGroup>
+
 </Project>
