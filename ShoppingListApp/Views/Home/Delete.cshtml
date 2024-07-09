@@ -3,51 +3,16 @@
 @{
     ViewData["Title"] = "Usuń listę";
 }
+<link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-<h1>Usuń listę</h1>
+<h1>@ViewData["Title"]</h1>
 
 <p>Czy na pewno chcesz usunąć tę listę: <strong>@Model.ListName</strong>?</p>
 
-<form id="delete-form" method="post" action="@Url.Action("DeleteConfirmed", "Home")">
+<form method="post" asp-action="DeleteConfirmed" asp-route-id="@Model.Id">
     @Html.AntiForgeryToken()
-    <input type="hidden" id="delete-id" name="id" value="@Model.Id" />
     <button type="submit" class="btn btn-danger">Usuń</button>
     <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Anuluj</a>
 </form>
-
-@section Scripts {
-    <script>
-        document.getElementById('delete-form').onsubmit = function (event) {
-            event.preventDefault(); 
-
-            if (confirm('Czy na pewno chcesz usunąć tę listę?')) {
-                var form = event.target;
-                var formAction = form.action;
-                var id = document.getElementById('delete-id').value;
-
-                fetch(formAction, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: new URLSearchParams('id=' + id)
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.href = '@Url.Action("Index", "Home")';
-                        } else {
-                            response.text().then(text => alert('Wystąpił błąd podczas usuwania listy: ' + text));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Wystąpił błąd podczas usuwania listy.');
-                    });
-            }
-        };
-    </script>
-}
-
 
 

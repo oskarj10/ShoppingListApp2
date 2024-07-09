@@ -21,7 +21,8 @@ public class ShoppingListItemAuthorizationHandler : AuthorizationHandler<Ownersh
         }
 
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (resource.Owner.Id == userId)
+
+        if (resource.Owner != null && resource.Owner.Id == userId)
         {
             context.Succeed(requirement);
         }
@@ -29,8 +30,6 @@ public class ShoppingListItemAuthorizationHandler : AuthorizationHandler<Ownersh
         return Task.CompletedTask;
     }
 }
-
-    
 
 
 

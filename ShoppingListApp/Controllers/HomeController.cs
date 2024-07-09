@@ -25,9 +25,8 @@ public class HomeController : Controller
         var shoppingLists = await _context.ShoppingListItems
             .Where(s => s.OwnerId == userId)
             .ToListAsync();
-        return View(shoppingLists ?? new List<ShoppingListItem>()); 
+        return View(shoppingLists ?? new List<ShoppingListItem>());
     }
-
 
     // GET: /Home/Create
     [Authorize]
@@ -40,16 +39,37 @@ public class HomeController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize]
-    public async Task<IActionResult> Create([Bind("ListName,ShoppingDate,Description,IsChecked")] ShoppingListItem shoppingListItem)
+    public async Task<IActionResult> Create([Bind("ListName,Description,ShoppingDate,IsChecked")] ShoppingListItem shoppingListItem)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
+        {
+            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                Console.WriteLine(error.ErrorMessage);
+            }
+            return View(shoppingListItem);
+        }
+
+        try
         {
             shoppingListItem.OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(shoppingListItem.OwnerId))
+            {
+                ModelState.AddModelError("", "Nie znaleziono identyfikatora użytkownika.");
+                return View(shoppingListItem);
+            }
+
             _context.Add(shoppingListItem);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
-        return View(shoppingListItem);
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Błąd podczas zapisywania: {ex.Message}");
+            ModelState.AddModelError("", "Wystąpił problem podczas zapisywania listy.");
+            return View(shoppingListItem);
+        }
     }
 
     // GET: /Home/Edit/{id}
@@ -62,7 +82,7 @@ public class HomeController : Controller
         }
 
         var shoppingListItem = await _context.ShoppingListItems
-            .Include(s => s.Owner)
+            .Include(s => s.Owner) 
             .FirstOrDefaultAsync(s => s.Id == id);
 
         if (shoppingListItem == null)
@@ -91,7 +111,6 @@ public class HomeController : Controller
         }
 
         var authorizationResult = await _authorizationService.AuthorizeAsync(User, shoppingListItem, "RequireOwner");
-
         if (!authorizationResult.Succeeded)
         {
             return Forbid();
@@ -130,7 +149,7 @@ public class HomeController : Controller
         }
 
         var shoppingListItem = await _context.ShoppingListItems
-            .Include(s => s.Owner)
+            .Include(s => s.Owner) 
             .Include(s => s.Products)
             .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -146,6 +165,71 @@ public class HomeController : Controller
         }
 
         return View(shoppingListItem);
+    }
+
+    // POST: /Home/ToggleStatus/{id}
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ToggleStatus(int id)
+    {
+        var product = await _context.ShoppingProducts.FindAsync(id);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        product.IsChecked = !product.IsChecked;
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    // POST: /Home/DeleteProduct/{id}
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        var product = await _context.ShoppingProducts.FindAsync(id);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        _context.ShoppingProducts.Remove(product);
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    // POST: /Home/AddProduct
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> AddProduct(string name, int listId)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return BadRequest("Nazwa produktu nie może być pusta.");
+        }
+
+        
+        var listExists = await _context.ShoppingListItems.AnyAsync(l => l.Id == listId);
+        if (!listExists)
+        {
+            return BadRequest("Listy zakupów o podanym ID nie znaleziono.");
+        }
+
+        var newProduct = new ShoppingProduct
+        {
+            ProductName = name,
+            ShoppingListId = listId,
+            IsChecked = false,
+            OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+        };
+
+        _context.ShoppingProducts.Add(newProduct);
+        await _context.SaveChangesAsync();
+
+        return Json(newProduct);
     }
 
     // GET: /Home/Delete/{id}
@@ -182,8 +266,7 @@ public class HomeController : Controller
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var shoppingListItem = await _context.ShoppingListItems
-            .Include(s => s.Owner)
-            .Include(s => s.Products) 
+            .Include(s => s.Products)
             .FirstOrDefaultAsync(s => s.Id == id);
 
         if (shoppingListItem == null)
@@ -197,13 +280,11 @@ public class HomeController : Controller
             return Forbid();
         }
 
-        
         _context.ShoppingProducts.RemoveRange(shoppingListItem.Products);
-
         _context.ShoppingListItems.Remove(shoppingListItem);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return RedirectToAction(nameof(Index));
     }
 
     private bool ShoppingListItemExists(int id)
@@ -211,8 +292,3 @@ public class HomeController : Controller
         return _context.ShoppingListItems.Any(e => e.Id == id);
     }
 }
-
-
-
-
-

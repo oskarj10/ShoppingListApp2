@@ -1,112 +1,93 @@
 ﻿@model ShoppingListApp.Data.ShoppingListItem
 
-@{
-    ViewData["Title"] = "Szczegóły listy: " + Model.ListName;
-}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Szczegóły listy</title>
+    <style>
+        .crossed {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <h2>Szczegóły listy: @Model.ListName</h2>
+    <p>Data zakupów: @Model.ShoppingDate.ToString("dd.MM.yyyy HH:mm:ss")</p>
 
-<h1>@ViewData["Title"]</h1>
-
-<p>Nazwa listy: @Model.ListName</p>
-<p>Data zakupów: @Model.ShoppingDate.ToString("dd.MM.yyyy HH:mm:ss")</p>
-
-<h3>Produkty</h3>
-<ul class="list-group mt-3" id="product-list">
-    @foreach (var product in Model.Products)
-    {
-        <li class="list-group-item" data-product-id="@product.Id">
-            @if (product.IsChecked)
-            {
-                <del>@product.ProductName</del>
-            }
-            else
-            {
+    <h3>Produkty</h3>
+    <ul id="product-list">
+        @foreach (var product in Model.Products)
+        {
+            <li id="product-@product.Id" class="@(product.IsChecked ? "crossed" : "")">
                 @product.ProductName
-            }
-            <button type="button" class="btn btn-sm btn-secondary float-end mx-1 toggle-status">Zmień status</button>
-            <button type="button" class="btn btn-sm btn-danger float-end mx-1 delete-product">Usuń</button>
-        </li>
-    }
-</ul>
+                <button onclick="toggleStatus(@product.Id)">Zmień status</button>
+                <button onclick="deleteProduct(@product.Id)">Usuń</button>
+            </li>
+        }
+    </ul>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <h3>Dodaj nowy produkt</h3>
+    <input type="text" id="new-product-name" placeholder="Nazwa produktu" />
+    <button onclick="addProduct(@Model.Id)">Dodaj produkt</button>
 
-<h4>Dodaj nowy produkt</h4>
-<form id="add-product-form" asp-controller="ShoppingProduct" asp-action="Create" method="post">
-    <input type="hidden" name="ShoppingListId" value="@Model.Id" />
-    <div class="form-group">
-        <label for="ProductName">Nazwa produktu</label>
-        <input type="text" name="ProductName" class="form-control" required />
-    </div>
-    <button type="submit" class="btn btn-primary">Dodaj produkt</button>
-</form>
-
-<div class="mt-3">
-    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Powrót do list</a>
-</div>
-
-@section Scripts {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#product-list').on('click', '.toggle-status', function () {
-                var $li = $(this).closest('li');
-                var productId = $li.data('product-id');
-
-                $.post('@Url.Action("ToggleProduct", "ShoppingProduct")', { id: productId })
-                    .done(function (data) {
-                        if (data.isChecked) {
-                            $li.find('del').remove();
-                            $li.contents().first().wrap('<del></del>');
-                        } else {
-                            $li.find('del').contents().unwrap();
-                        }
-                    })
-                    .fail(function () {
-                        alert('Wystąpił błąd podczas zmiany statusu.');
-                    });
-            });
-
-            $('#product-list').on('click', '.delete-product', function () {
-                var $li = $(this).closest('li');
-                var productId = $li.data('product-id');
-
-                if (confirm('Czy na pewno chcesz usunąć ten produkt?')) {
-                    $.post('@Url.Action("DeleteProduct", "ShoppingProduct")', { id: productId })
-                        .done(function (data) {
-                            if (data.success) {
-                                $li.remove();
-                            } else {
-                                alert('Wystąpił błąd podczas usuwania produktu.');
-                            }
-                        })
-                        .fail(function () {
-                            alert('Wystąpił błąd podczas usuwania produktu.');
-                        });
+        function toggleStatus(productId) {
+            $.ajax({
+                url: '@Url.Action("ToggleStatus", "Home")',
+                type: 'POST',
+                data: { id: productId },
+                success: function (response) {
+                    $('#product-' + productId).toggleClass('crossed');
+                },
+                error: function () {
+                    console.log("Wystąpił błąd podczas zmiany statusu produktu.");
                 }
             });
+        }
 
-            $('#add-product-form').submit(function (event) {
-                event.preventDefault();
-                var form = $(this);
-                $.post(form.attr('action'), form.serialize())
-                    .done(function (data) {
-                        var newProduct = '<li class="list-group-item" data-product-id="' + data.id + '">' +
-                            data.productName +
-                            '<button type="button" class="btn btn-sm btn-secondary float-end mx-1 toggle-status">Zmień status</button>' +
-                            '<button type="button" class="btn btn-sm btn-danger float-end mx-1 delete-product">Usuń</button>' +
-                            '</li>';
-                        $('#product-list').append(newProduct);
-                        form[0].reset();
-                    })
-                    .fail(function () {
-                        alert('Wystąpił błąd podczas dodawania produktu.');
-                    });
+        function deleteProduct(productId) {
+            $.ajax({
+                url: '@Url.Action("DeleteProduct", "Home")',
+                type: 'POST',
+                data: { id: productId },
+                success: function (response) {
+                    $('#product-' + productId).remove();
+                },
+                error: function () {
+                    console.log("Wystąpił błąd podczas usuwania produktu.");
+                }
             });
-        });
+        }
+
+        function addProduct(listId) {
+            var productName = $('#new-product-name').val();
+            if (!productName) {
+                alert("Nazwa produktu nie może być pusta.");
+                return;
+            }
+            $.ajax({
+                url: '@Url.Action("AddProduct", "Home")',
+                type: 'POST',
+                data: { name: productName, listId: listId },
+                success: function (newProduct) {
+                    $('#product-list').append(
+                        '<li id="product-' + newProduct.Id + '" class="' + (newProduct.IsChecked ? 'crossed' : '') + '">' + newProduct.ProductName +
+                        ' <button onclick="toggleStatus(' + newProduct.Id + ')">Zmień status</button>' +
+                        ' <button onclick="deleteProduct(' + newProduct.Id + ')">Usuń</button>' +
+                        '</li>'
+                    );
+                    $('#new-product-name').val(''); // Czyść pole tekstowe po dodaniu
+                },
+                error: function () {
+                    console.log("Wystąpił błąd podczas dodawania produktu.");
+                }
+            });
+        }
     </script>
-}
 
-
-
+    <a href="@Url.Action("Index", "Home")">Powrót do list</a>
+</body>
+</html>
 
 

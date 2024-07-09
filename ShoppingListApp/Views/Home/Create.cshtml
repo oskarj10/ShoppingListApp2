@@ -3,37 +3,38 @@
 @{
     ViewData["Title"] = "Utwórz listę";
 }
-
-<h2>Utwórz listę</h2>
+<link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+<h2>@ViewData["Title"]</h2>
 <hr />
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <form asp-action="Create">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="ListName" class="form-label">Nazwa listy</label>
-                    <input asp-for="ListName" class="form-control" placeholder="Wprowadź nazwę listy" />
+                    <label for="ListName" class="form-label">Nazwa listy</label>
+                    <input id="ListName" name="ListName" asp-for="ListName" class="form-control" placeholder="Wprowadź nazwę listy" />
                     <span asp-validation-for="ListName" class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="Description" class="form-label">Opis</label>
-                    <input asp-for="Description" class="form-control" placeholder="Wprowadź opis" />
+                    <label for="Description" class="form-label">Opis</label>
+                    <input id="Description" name="Description" asp-for="Description" class="form-control" placeholder="Wprowadź opis" />
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="ShoppingDate" class="form-label">Data zakupów</label>
-                    <input asp-for="ShoppingDate" class="form-control" type="date" />
+                    <label for="ShoppingDate" class="form-label">Data zakupów</label>
+                    <input id="ShoppingDate" name="ShoppingDate" asp-for="ShoppingDate" class="form-control" type="date" />
                     <span asp-validation-for="ShoppingDate" class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
                     <div class="form-check">
-                        <input asp-for="IsChecked" type="checkbox" class="form-check-input" />
-                        <label asp-for="IsChecked" class="form-check-label">Zaznaczone</label>
+                        <input id="IsChecked" name="IsChecked" asp-for="IsChecked" type="checkbox" class="form-check-input" />
+                        <label for="IsChecked" class="form-check-label">Zaznaczone</label>
                     </div>
                     <span asp-validation-for="IsChecked" class="text-danger"></span>
                 </div>
@@ -51,10 +52,4 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
-
-
-
-
-
-
 

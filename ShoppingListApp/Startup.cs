@@ -42,6 +42,7 @@ public class Startup
                 .Build();
         });
 
+        
         services.AddScoped<IAuthorizationHandler, ShoppingListItemAuthorizationHandler>();
     }
 

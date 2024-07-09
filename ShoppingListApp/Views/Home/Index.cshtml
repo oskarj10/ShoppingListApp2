@@ -1,11 +1,11 @@
 ﻿@model List<ShoppingListApp.Data.ShoppingListItem>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Listy zakupów";
 }
 <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-<h1>Listy zakupów</h1>
+<h1>@ViewData["Title"]</h1>
 
 <p>
     <form action="/Home/Create" method="get">
@@ -16,9 +16,9 @@
 <table class="table">
     <thead>
         <tr>
-            <th>@Html.DisplayNameFor(model => model[0].ListName)</th>
-            <th>@Html.DisplayNameFor(model => model[0].Description)</th>
-            <th>@Html.DisplayNameFor(model => model[0].ShoppingDate)</th>
+            <th>Nazwa listy</th>
+            <th>Opis</th>
+            <th>Data zakupów</th>
             <th>Akcja</th>
         </tr>
     </thead>
@@ -40,7 +40,8 @@
                         <button type="submit" class="btn btn-warning">Edytuj</button>
                     </form>
 
-                    <form class="delete-form" data-id="@item.Id" style="display:inline;" onsubmit="return confirm('Czy na pewno chcesz usunąć tę listę?');">
+                    <form class="delete-form" method="post" action="/Home/DeleteConfirmed" style="display:inline;">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@item.Id" />
                         <button type="submit" class="btn btn-danger">Usuń</button>
                     </form>
@@ -51,33 +52,34 @@
 </table>
 
 @section Scripts {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    
     <script>
         $(document).ready(function () {
             $(".delete-form").on("submit", function (event) {
                 event.preventDefault();
                 var form = $(this);
-                var id = form.data("id");
-                console.log("Próba usunięcia listy z ID: " + id); 
+                var id = form.find('input[name="id"]').val();
+                console.log("Próba usunięcia listy z ID: " + id);
 
-                $.ajax({
-                    type: "POST",
-                    url: "/Home/DeleteConfirmed",
-                    data: form.serialize(),
-                    success: function () {
-                        console.log("Lista z ID " + id + " została usunięta."); 
-                        $("#row-" + id).remove();
-                    },
-                    error: function () {
-                        console.log("Wystąpił błąd podczas usuwania listy z ID " + id); 
-                    }
-                });
+                if (confirm('Czy na pewno chcesz usunąć tę listę?')) {
+                    $.ajax({
+                        type: "POST",
+                        url: form.attr("action"),
+                        data: form.serialize(),
+                        success: function () {
+                            console.log("Lista z ID " + id + " została usunięta.");
+                            $("#row-" + id).remove();
+                        },
+                        error: function () {
+                            console.log("Wystąpił błąd podczas usuwania listy z ID " + id);
+                        }
+                    });
+                }
             });
         });
     </script>
 }
+
 
 
 
