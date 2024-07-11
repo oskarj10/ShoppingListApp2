@@ -17,15 +17,27 @@ namespace ShoppingListApp.Data
         {
             base.OnModelCreating(builder);
 
-            // Configure cascading delete for ShoppingListItem and ShoppingProduct
             builder.Entity<ShoppingListItem>()
                 .HasMany(s => s.Products)
                 .WithOne(p => p.ShoppingList)
                 .HasForeignKey(p => p.ShoppingListId)
-                .OnDelete(DeleteBehavior.Cascade); // Ensure cascading delete
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ShoppingProduct>()
+                .HasOne(p => p.Owner)
+                .WithMany()
+                .HasForeignKey(p => p.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ShoppingListItem>()
+                .HasOne(s => s.Owner)
+                .WithMany()
+                .HasForeignKey(s => s.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
+
 
 
 

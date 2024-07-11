@@ -25,7 +25,7 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr id="row-@item.Id">
+            <tr id="row-@item.Id" class="@(item.IsChecked ? "skreslony" : "")">
                 <td>@Html.DisplayFor(modelItem => item.ListName)</td>
                 <td>@Html.DisplayFor(modelItem => item.Description)</td>
                 <td>@Html.DisplayFor(modelItem => item.ShoppingDate)</td>
@@ -40,10 +40,11 @@
                         <button type="submit" class="btn btn-warning">Edytuj</button>
                     </form>
 
-                    <form class="delete-form" method="post" action="/Home/DeleteConfirmed" style="display:inline;">
+
+                    <form class="toggle-list-status-form" method="post" action="/Home/ToggleListStatus" style="display:inline;">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@item.Id" />
-                        <button type="submit" class="btn btn-danger">Usuń</button>
+                        <button type="submit" class="btn btn-secondary">Skreśl listę</button>
                     </form>
                 </td>
             </tr>
@@ -52,33 +53,55 @@
 </table>
 
 @section Scripts {
-    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         $(document).ready(function () {
-            $(".delete-form").on("submit", function (event) {
+            
+
+            $(".toggle-list-status-form").on("submit", function (event) {
                 event.preventDefault();
+
                 var form = $(this);
                 var id = form.find('input[name="id"]').val();
-                console.log("Próba usunięcia listy z ID: " + id);
+                var row = $("#row-" + id);
 
-                if (confirm('Czy na pewno chcesz usunąć tę listę?')) {
-                    $.ajax({
-                        type: "POST",
-                        url: form.attr("action"),
-                        data: form.serialize(),
-                        success: function () {
-                            console.log("Lista z ID " + id + " została usunięta.");
-                            $("#row-" + id).remove();
-                        },
-                        error: function () {
-                            console.log("Wystąpił błąd podczas usuwania listy z ID " + id);
-                        }
-                    });
+                if (row.hasClass("skreslony")) {
+                    console.log("Lista z ID " + id + jest już skreślona i nie można jej przywrócić.");
+                            return;
                 }
+
+                console.log("Próba zmiany statusu listy z ID: " + id);
+
+                $.ajax({
+                    type: "POST",
+                    url: form.attr("action"),
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            console.log("Status listy z ID " + id + został zmieniony.");
+                                    row.addClass("skreslony");
+                        } else {
+                            console.log("Wystąpił błąd podczas zmiany statusu listy z ID " + id);
+                        }
+                    },
+                    error: function () {
+                        console.log("Wystąpił błąd podczas zmiany statusu listy z ID " + id);
+                    }
+                });
             });
         });
     </script>
 }
+
+<style>
+    .skreslony {
+        text-decoration: line-through;
+        color: gray;
+    }
+</style>
+
 
 
 

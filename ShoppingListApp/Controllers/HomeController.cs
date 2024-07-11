@@ -82,7 +82,7 @@ public class HomeController : Controller
         }
 
         var shoppingListItem = await _context.ShoppingListItems
-            .Include(s => s.Owner) 
+            .Include(s => s.Owner)
             .FirstOrDefaultAsync(s => s.Id == id);
 
         if (shoppingListItem == null)
@@ -139,6 +139,7 @@ public class HomeController : Controller
         return View(shoppingListItem);
     }
 
+
     // GET: /Home/Details/{id}
     [Authorize]
     public async Task<IActionResult> Details(int? id)
@@ -149,7 +150,7 @@ public class HomeController : Controller
         }
 
         var shoppingListItem = await _context.ShoppingListItems
-            .Include(s => s.Owner) 
+            .Include(s => s.Owner)
             .Include(s => s.Products)
             .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -184,6 +185,23 @@ public class HomeController : Controller
         return Ok();
     }
 
+    // POST: /Home/ToggleListStatus/{id}
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ToggleListStatus(int id)
+    {
+        var shoppingList = await _context.ShoppingListItems.FindAsync(id);
+        if (shoppingList == null)
+        {
+            return Json(new { success = false, error = "List not found." });
+        }
+
+        shoppingList.IsChecked = !shoppingList.IsChecked;
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, isChecked = shoppingList.IsChecked });
+    }
+
     // POST: /Home/DeleteProduct/{id}
     [HttpPost]
     [Authorize]
@@ -211,7 +229,6 @@ public class HomeController : Controller
             return BadRequest("Nazwa produktu nie może być pusta.");
         }
 
-        
         var listExists = await _context.ShoppingListItems.AnyAsync(l => l.Id == listId);
         if (!listExists)
         {
@@ -223,7 +240,7 @@ public class HomeController : Controller
             ProductName = name,
             ShoppingListId = listId,
             IsChecked = false,
-            OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+            OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier)
         };
 
         _context.ShoppingProducts.Add(newProduct);
@@ -232,63 +249,11 @@ public class HomeController : Controller
         return Json(newProduct);
     }
 
-    // GET: /Home/Delete/{id}
-    [Authorize]
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        var shoppingListItem = await _context.ShoppingListItems
-            .Include(s => s.Owner)
-            .FirstOrDefaultAsync(s => s.Id == id);
-
-        if (shoppingListItem == null)
-        {
-            return NotFound();
-        }
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, shoppingListItem, "RequireOwner");
-        if (!authorizationResult.Succeeded)
-        {
-            return Forbid();
-        }
-
-        return View(shoppingListItem);
-    }
-
-    // POST: /Home/DeleteConfirmed
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    [Authorize]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        var shoppingListItem = await _context.ShoppingListItems
-            .Include(s => s.Products)
-            .FirstOrDefaultAsync(s => s.Id == id);
-
-        if (shoppingListItem == null)
-        {
-            return NotFound();
-        }
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, shoppingListItem, "RequireOwner");
-        if (!authorizationResult.Succeeded)
-        {
-            return Forbid();
-        }
-
-        _context.ShoppingProducts.RemoveRange(shoppingListItem.Products);
-        _context.ShoppingListItems.Remove(shoppingListItem);
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
-    }
+    
 
     private bool ShoppingListItemExists(int id)
     {
         return _context.ShoppingListItems.Any(e => e.Id == id);
     }
 }
+

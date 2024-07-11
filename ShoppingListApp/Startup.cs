@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,7 +32,7 @@ public class Startup
 
         services.Configure<IdentityOptions>(options =>
         {
-            
+            // Configure Identity options if needed
         });
 
         services.AddAuthorization(options =>
@@ -42,7 +44,15 @@ public class Startup
                 .Build();
         });
 
-        
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensures the Secure attribute is set
+            options.Cookie.SameSite = SameSiteMode.None; // Required for cross-origin requests
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensure cookies are always marked as secure
+        });
+
+
         services.AddScoped<IAuthorizationHandler, ShoppingListItemAuthorizationHandler>();
     }
 
@@ -76,3 +86,4 @@ public class Startup
         });
     }
 }
+
