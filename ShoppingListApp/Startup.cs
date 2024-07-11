@@ -32,7 +32,7 @@ public class Startup
 
         services.Configure<IdentityOptions>(options =>
         {
-            
+           
         });
 
         services.AddAuthorization(options =>
@@ -45,12 +45,12 @@ public class Startup
         });
 
         services.ConfigureApplicationCookie(options =>
-        {
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; t
-            options.Cookie.SameSite = SameSiteMode.None; 
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
-        });
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+    options.Cookie.SameSite = SameSiteMode.None; 
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+});
 
 
         services.AddScoped<IAuthorizationHandler, ShoppingListItemAuthorizationHandler>();
